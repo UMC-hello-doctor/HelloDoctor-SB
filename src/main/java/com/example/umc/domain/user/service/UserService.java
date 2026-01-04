@@ -23,12 +23,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 1. 회원 정보 등록
+    // 회원 정보 등록
     public void registerUserInfo(String email, UserRegistrationDto dto) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("가입되지 않은 이메일입니다."));
 
-        // 기본 정보 업데이트
         user.setName(dto.getName());
         user.setGender(dto.getGender());
         user.setBirthDate(dto.getBirthDate());
@@ -39,7 +38,6 @@ public class UserService {
         user.setPregnant(dto.isPregnant());
         user.setStatus(UserStatus.ACTIVE);
 
-        // 1:N 관계 데이터 저장
         if (dto.isHasAllergy() && dto.getAllergies() != null) {
             user.getAllergies().clear();
             for (String allergyName : dto.getAllergies()) {
@@ -56,7 +54,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 2. 토큰 재발급
+    // 토큰 재발급
     public Map<String, String> reissueToken(String refreshToken) {
         jwtTokenProvider.validateToken(refreshToken);
         String email = jwtTokenProvider.getEmail(refreshToken);
@@ -80,7 +78,7 @@ public class UserService {
         return tokens;
     }
 
-    // 3. 언어 설정 변경
+    // 언어 설정 변경
     public void updateLanguage(String email, String languageCode) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));

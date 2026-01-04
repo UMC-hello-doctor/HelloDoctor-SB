@@ -1,6 +1,6 @@
 package com.example.umc.domain.user.controller;
 
-import com.example.umc.domain.user.dto.LanguageUpdateDto; // DTO import 추가
+import com.example.umc.domain.user.dto.LanguageUpdateDto;
 import com.example.umc.domain.user.dto.UserRegistrationDto;
 import com.example.umc.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,6 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
-        // DTO에서 Enum을 꺼내 문자열로 변환하여 전달 (.name() 사용)
         userService.updateLanguage(email, dto.getLanguage().name());
 
         Map<String, String> response = new HashMap<>();
