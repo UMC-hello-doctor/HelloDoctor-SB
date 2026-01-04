@@ -28,12 +28,10 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    // Access Token 생성
     public String createAccessToken(String email) {
         return createToken(email, accessTokenValidity);
     }
 
-    // Refresh Token 생성
     public String createRefreshToken(String email) {
         return createToken(email, refreshTokenValidity);
     }
@@ -57,7 +55,6 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    // [중요 수정] 이제 boolean을 반환하지 않고, 문제가 있으면 예외(Exception)를 던집니다.
     public void validateToken(String token) {
         Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
     }

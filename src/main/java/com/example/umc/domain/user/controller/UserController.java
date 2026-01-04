@@ -19,7 +19,6 @@ public class UserController {
 
     private final UserService userService;
 
-    // 1. 회원 정보 등록 API
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> registerUserInfo(@RequestBody UserRegistrationDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -34,14 +33,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // 2. 토큰 재발급 API
     @PostMapping("/reissue")
     public ResponseEntity<Map<String, String>> reissueToken(@RequestHeader("RefreshToken") String refreshToken) {
         Map<String, String> tokens = userService.reissueToken(refreshToken);
         return ResponseEntity.ok(tokens);
     }
 
-    // 3. 언어 설정 변경 API
     @PatchMapping("/language")
     public ResponseEntity<Map<String, String>> updateLanguage(@RequestBody LanguageUpdateDto dto) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
