@@ -1,33 +1,37 @@
 package com.example.umc.global.error;
 
-import org.springframework.http.ResponseEntity;
+import com.example.umc.global.common.ApiResponse;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(GeneralException.class)
+    public ApiResponse<Object> handleGeneralException(GeneralException e) {
+        return ApiResponse.onFailure(e.getCode(), e.getMessage(), null);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ApiResponse<Object> handleAuthenticationException(AuthenticationException e) {
+        return ApiResponse.onFailure("COMMON401", "인증이 필요합니다.", null);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ApiResponse<Object> handleAccessDeniedException(AccessDeniedException e) {
+        return ApiResponse.onFailure("COMMON403", "금지된 요청입니다.", null);
+    }
+
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException e) {
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", "ERROR");
-        response.put("message", e.getMessage());
-
-        return ResponseEntity.status(400).body(response);
+    public ApiResponse<Object> handleRuntimeException(RuntimeException e) {
+        return ApiResponse.onFailure("COMMON400", e.getMessage(), null);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleException(Exception e) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", "SERVER_ERROR");
-        response.put("message", "서버 내부 오류가 발생했습니다.");
-
+    public ApiResponse<Object> handleException(Exception e) {
         e.printStackTrace();
-
-        return ResponseEntity.status(500).body(response);
+        return ApiResponse.onFailure("COMMON500", "서버 에러, 관리자에게 문의 바랍니다.", null);
     }
 }
