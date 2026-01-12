@@ -2,9 +2,9 @@ package com.example.umc.domain.user.service;
 
 import com.example.umc.domain.user.dto.GoogleLoginDto;
 import com.example.umc.domain.user.entity.User;
-import com.example.umc.domain.user.enums.UserStatus;
 import com.example.umc.domain.user.repository.UserRepository;
 import com.example.umc.global.config.JwtTokenProvider;
+import com.example.umc.global.error.GeneralException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -52,7 +52,7 @@ public class AuthService {
                 email = payload.getEmail();
                 name = (String) payload.get("name");
             } catch (Exception e) {
-                throw new RuntimeException("유효하지 않은 구글 토큰입니다.");
+                throw new GeneralException("JWT4002", "유효하지 않은 구글 토큰입니다.");
             }
         }
 
@@ -64,7 +64,6 @@ public class AuthService {
                 .orElseGet(() -> User.builder()
                         .email(email)
                         .name(name)
-                        .status(UserStatus.PENDING)
                         .build());
 
         userRepository.save(user);
