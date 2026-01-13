@@ -9,6 +9,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -76,6 +78,36 @@ public class AuthService {
         Map<String, String> tokens = new HashMap<>();
         tokens.put("accessToken", accessToken);
         tokens.put("refreshToken", refreshToken);
+
+        return tokens;
+    }
+
+    @Transactional
+    public Map<String, String> reissueToken(String refreshToken) {
+        try {
+            jwtTokenProvider.validateToken(refreshToken);
+        } catch (ExpiredJwtException e) {
+            throw new GeneralException("JWT4031", "리프레시 토큰이 만료되었습니다.");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new GeneralException("JWT4032", "유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        String email = jwtTokenProvider.getEmail(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
+
+        if (user.getRefreshToken() == null || !user.getRefreshToken().equals(refreshToken)) {
+            throw new GeneralException("JWT4005", "RefreshToken이 일치하지 않습니다.");
+        }
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+
+        user.updateRefreshToken(newRefreshToken);
+
+        Map<String, String> tokens = new HashMap<>();
+        tokens.put("accessToken", newAccessToken);
+        tokens.put("refreshToken", newRefreshToken);
 
         return tokens;
     }
