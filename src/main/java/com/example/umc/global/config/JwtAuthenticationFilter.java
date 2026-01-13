@@ -40,10 +40,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         } catch (ExpiredJwtException e) {
-            setErrorResponse(response, "TOKEN_EXPIRED", "토큰이 만료되었습니다. Refresh Token을 보내주세요.");
+            setErrorResponse(response, "JWT4004", "만료된 토큰입니다.");
             return;
         } catch (JwtException | IllegalArgumentException e) {
-            setErrorResponse(response, "INVALID_TOKEN", "유효하지 않은 토큰입니다.");
+            setErrorResponse(response, "JWT4002", "유효하지 않은 토큰입니다.");
             return;
         }
 
@@ -54,9 +54,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
 
-        Map<String, String> responseMap = new HashMap<>();
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("isSuccess", false);
         responseMap.put("code", code);
         responseMap.put("message", message);
+        responseMap.put("result", null);
 
         response.getWriter().write(objectMapper.writeValueAsString(responseMap));
     }

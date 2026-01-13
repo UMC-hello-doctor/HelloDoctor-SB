@@ -1,24 +1,28 @@
 package com.example.umc.domain.user.entity;
 
+import com.example.umc.domain.user.enums.AllergyType;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
-public class Allergy {
+@Table(name = "user_allergy")
+public class UserAllergy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String name;
+    private AllergyType allergyType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "patient_profile_id", nullable = false)
+    private PatientProfile patientProfile;
+
 }
