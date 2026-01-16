@@ -34,10 +34,12 @@ public class AuthService {
     public Map<String, String> googleLogin(GoogleLoginDto dto) {
         String email;
         String name;
+        String providerId;
 
         if ("TEST_TOKEN".equals(dto.getIdToken())) {
             email = "test@gmail.com";
             name = "테스트유저";
+            providerId = "TEST_PROVIDER_ID";
         } else {
             try {
                 GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
@@ -53,6 +55,7 @@ public class AuthService {
                 GoogleIdToken.Payload payload = idToken.getPayload();
                 email = payload.getEmail();
                 name = (String) payload.get("name");
+                providerId = payload.getSubject();
             } catch (Exception e) {
                 throw new GeneralException("JWT4002", "유효하지 않은 구글 토큰입니다.");
             }
@@ -66,6 +69,7 @@ public class AuthService {
                 .orElseGet(() -> User.builder()
                         .email(email)
                         .name(name)
+                        .providerId(providerId)
                         .build());
 
         userRepository.save(user);
