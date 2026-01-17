@@ -1,6 +1,7 @@
 package com.example.umc.domain.user.service;
 
 import com.example.umc.domain.user.dto.GoogleLoginDto;
+import com.example.umc.domain.user.dto.LoginResponseDto;
 import com.example.umc.domain.user.entity.User;
 import com.example.umc.domain.user.repository.UserRepository;
 import com.example.umc.global.config.JwtTokenProvider;
@@ -31,7 +32,7 @@ public class AuthService {
     private String googleClientId;
 
     @Transactional
-    public Map<String, String> googleLogin(GoogleLoginDto dto) {
+    public LoginResponseDto googleLogin(GoogleLoginDto dto) {
         String email;
         String name;
         String providerId;
@@ -79,11 +80,13 @@ public class AuthService {
 
         user.updateRefreshToken(refreshToken);
 
-        Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
-
-        return tokens;
+        return LoginResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Transactional
