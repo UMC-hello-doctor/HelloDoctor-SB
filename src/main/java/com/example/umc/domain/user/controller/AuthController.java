@@ -1,6 +1,7 @@
 package com.example.umc.domain.user.controller;
 
 import com.example.umc.domain.user.dto.GoogleLoginDto;
+import com.example.umc.domain.user.dto.LoginResponseDto;
 import com.example.umc.domain.user.service.AuthService;
 import com.example.umc.global.common.ApiResponse;
 import com.example.umc.domain.user.dto.RefreshTokenDto;
@@ -20,9 +21,9 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/google")
-    public ApiResponse<Map<String, String>> googleLogin(@RequestBody GoogleLoginDto dto) {
-        Map<String, String> tokens = authService.googleLogin(dto);
-        return ApiResponse.onSuccess(tokens);
+    public ApiResponse<LoginResponseDto> googleLogin(@RequestBody GoogleLoginDto dto) {
+        LoginResponseDto loginResponse = authService.googleLogin(dto);
+        return ApiResponse.onSuccess(loginResponse);
     }
 
     @PostMapping("/reissue")
