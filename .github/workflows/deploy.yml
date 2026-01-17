@@ -40,10 +40,13 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           script: |
-            pkill -f java || true
+            sudo pkill -9 -f java || true
+            ls -l /root/umc-0.0.1-SNAPSHOT.jar
             nohup java -Duser.timezone=Asia/Seoul -jar /root/umc-0.0.1-SNAPSHOT.jar \
             --spring.datasource.username=${{ secrets.USERNAME }} \
             --spring.datasource.password=${{ secrets.PASSWORD }} \
             --google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
             --spring.security.oauth2.client.registration.google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
             --spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }} > /root/nohup.out 2>&1 &
+            sleep 10
+            ps -ef | grep java
