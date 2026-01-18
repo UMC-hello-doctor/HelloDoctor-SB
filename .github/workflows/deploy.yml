@@ -23,6 +23,13 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon bootJar -Dorg.gradle.jvmargs="-Xmx1024m -Xms256m" --stacktrace
 
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
+
       - name: Transfer JAR to Server
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -33,21 +40,18 @@ jobs:
           target: "/root/"
           strip_components: 2
 
-      - name: Deploy to Server
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          script: |
+      - name: Deploy to Server via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes root@${{ secrets.HOST }} << 'EOF'
             sudo pkill -9 -f umc-0.0.1-SNAPSHOT.jar || true
             sleep 5
             nohup java -Xms64M -Xmx64M -Duser.timezone=Asia/Seoul -jar /root/umc-0.0.1-SNAPSHOT.jar \
-            --spring.datasource.username=${{ secrets.USERNAME }} \
-            --spring.datasource.password=${{ secrets.DB_PASSWORD }} \
-            --google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
-            --spring.security.oauth2.client.registration.google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
-            --spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-            > /root/nohup.out 2>&1 </dev/null &
-            sleep 30
-            ps -ef | grep umc-0.0.1-SNAPSHOT.jar
+              --spring.datasource.username=${{ secrets.USERNAME }} \
+              --spring.datasource.password=${{ secrets.DB_PASSWORD }} \
+              --google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
+              --spring.security.oauth2.client.registration.google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
+              --spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+              > /root/nohup.out 2>&1 </dev/null &
+            sleep 10
+            ps -ef | grep umc-0.0.1-SNAPSHOT.jar || true
+          EOF
