@@ -24,7 +24,7 @@ jobs:
           ./gradlew --no-daemon bootJar -Dorg.gradle.jvmargs="-Xmx1024m -Xms256m" --stacktrace
 
       - name: Transfer JAR to Server
-        uses: appleboy/scp-action@v0.1.10
+        uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
