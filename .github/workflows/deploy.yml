@@ -43,7 +43,7 @@ jobs:
       - name: Deploy to Server via SSH
         env:
           DB_USER: ${{ secrets.USERNAME }}
-          DB_PASS: ${{ secrets.PASSWORD }}
+          DB_PASS: ${{ secrets.DB_PASSWORD }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes root@${{ secrets.HOST }} << 'EOF'
