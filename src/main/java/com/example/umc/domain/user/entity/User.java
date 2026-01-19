@@ -1,67 +1,46 @@
 package com.example.umc.domain.user.entity;
 
-import java.util.List;
-
-import com.example.umc.domain.user.enums.BloodType;
-import com.example.umc.domain.user.enums.Gender;
 import com.example.umc.domain.user.enums.Language;
-import com.example.umc.domain.user.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
-import java.util.ArrayList;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
+@Table(name = "users")
+@EntityListeners(AuditingEntityListener.class) //creatd_at 자동관리
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    private Gender gender;
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
 
-    private LocalDate birthDate;
-
-    @Enumerated(EnumType.STRING)
-    private BloodType bloodType;
-
-    private String bloodTypeDetail;
-
-    private boolean hasAllergy;
-
-    private boolean takesMedication;
-
-    private boolean isPregnant;
-
-    @Enumerated(EnumType.STRING)
+    //OIDC 방식
     @Column(nullable = false)
-    private UserStatus status;
+    private String providerId;
+
+    @Column(length = 512)
+    private String refreshToken;
 
     @Enumerated(EnumType.STRING)
     private Language language;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Allergy> allergies = new ArrayList<>();
-
-    @Builder.Default
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Medication> medications = new ArrayList<>();
-
-    @Column(length = 512)
-    private String refreshToken;
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;

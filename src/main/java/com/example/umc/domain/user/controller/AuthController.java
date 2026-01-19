@@ -1,9 +1,11 @@
 package com.example.umc.domain.user.controller;
 
 import com.example.umc.domain.user.dto.GoogleLoginDto;
+import com.example.umc.domain.user.dto.LoginResponseDto;
 import com.example.umc.domain.user.service.AuthService;
+import com.example.umc.global.common.ApiResponse;
+import com.example.umc.domain.user.dto.RefreshTokenDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,8 +21,15 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/google")
-    public ResponseEntity<Map<String, String>> googleLogin(@RequestBody GoogleLoginDto dto) {
-        Map<String, String> tokens = authService.googleLogin(dto);
-        return ResponseEntity.ok(tokens);
+    public ApiResponse<LoginResponseDto> googleLogin(@RequestBody GoogleLoginDto dto) {
+        LoginResponseDto loginResponse = authService.googleLogin(dto);
+        return ApiResponse.onSuccess(loginResponse);
+    }
+
+    @PostMapping("/reissue")
+    public ApiResponse<Map<String, String>> reissueToken(@RequestBody RefreshTokenDto request) {
+        String refreshToken = request.getRefreshToken();
+        Map<String, String> tokens = authService.reissueToken(refreshToken);
+        return ApiResponse.onSuccess(tokens);
     }
 }

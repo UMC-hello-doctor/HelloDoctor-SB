@@ -1,0 +1,57 @@
+name: Java CI/CD with Gradle
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon bootJar -Dorg.gradle.jvmargs="-Xmx1024m -Xms256m" --stacktrace
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Transfer JAR to Server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          source: "build/libs/umc-0.0.1-SNAPSHOT.jar"
+          target: "/root/"
+          strip_components: 2
+
+      - name: Deploy to Server via SSH
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes root@${{ secrets.HOST }} << 'EOF'
+            sudo pkill -9 -f umc-0.0.1-SNAPSHOT.jar || true
+            sleep 5
+            nohup java -Xms64M -Xmx64M -Duser.timezone=Asia/Seoul -jar /root/umc-0.0.1-SNAPSHOT.jar \
+              --spring.datasource.username=${{ secrets.USERNAME }} \
+              --spring.datasource.password=${{ secrets.DB_PASSWORD }} \
+              --google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
+              --spring.security.oauth2.client.registration.google.client-id=85034270884-er0pqm6160ink4ts6m84e5rlq9akrb0l.apps.googleusercontent.com \
+              --spring.security.oauth2.client.registration.google.client-secret=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+              > /root/nohup.out 2>&1 </dev/null &
+            sleep 10
+            ps -ef | grep umc-0.0.1-SNAPSHOT.jar || true
+          EOF

@@ -1,15 +1,23 @@
 package com.example.umc.domain.user.service;
 
 import com.example.umc.domain.user.dto.GoogleLoginDto;
+import com.example.umc.domain.user.dto.LoginResponseDto;
 import com.example.umc.domain.user.entity.User;
-import com.example.umc.domain.user.enums.UserStatus;
 import com.example.umc.domain.user.repository.UserRepository;
 import com.example.umc.global.config.JwtTokenProvider;
+import com.example.umc.global.error.GeneralException;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,29 +28,40 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Value("${google.client-id}")
+    private String googleClientId;
+
     @Transactional
-    public Map<String, String> googleLogin(GoogleLoginDto dto) {
+    public LoginResponseDto googleLogin(GoogleLoginDto dto) {
         String email;
         String name;
+        String providerId;
 
-        // 스웨거 테스트용
         if ("TEST_TOKEN".equals(dto.getIdToken())) {
             email = "test@gmail.com";
             name = "테스트유저";
+            providerId = "TEST_PROVIDER_ID";
         } else {
-            // 원래 로직
-            String googleApiUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + dto.getIdToken();
-            RestTemplate restTemplate = new RestTemplate();
             try {
-                Map<String, Object> googleResponse = restTemplate.getForObject(googleApiUrl, Map.class);
-                email = (String) googleResponse.get("email");
-                name = (String) googleResponse.get("name");
+                GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                        .setAudience(Collections.singletonList(googleClientId))
+                        .build();
+
+                GoogleIdToken idToken = verifier.verify(dto.getIdToken());
+
+                if (idToken == null) {
+                    throw new IllegalArgumentException();
+                }
+
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                email = payload.getEmail();
+                name = (String) payload.get("name");
+                providerId = payload.getSubject();
             } catch (Exception e) {
-                throw new RuntimeException("유효하지 않은 구글 토큰입니다.");
+                throw new GeneralException("JWT4002", "유효하지 않은 구글 토큰입니다.");
             }
         }
 
-        // DB에서 회원 조회 or 가입
         User user = userRepository.findByEmail(email)
                 .map(entity -> {
                     entity.setName(name);
@@ -51,7 +70,7 @@ public class AuthService {
                 .orElseGet(() -> User.builder()
                         .email(email)
                         .name(name)
-                        .status(UserStatus.PENDING)
+                        .providerId(providerId)
                         .build());
 
         userRepository.save(user);
@@ -61,9 +80,41 @@ public class AuthService {
 
         user.updateRefreshToken(refreshToken);
 
+        return LoginResponseDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Transactional
+    public Map<String, String> reissueToken(String refreshToken) {
+        try {
+            jwtTokenProvider.validateToken(refreshToken);
+        } catch (ExpiredJwtException e) {
+            throw new GeneralException("JWT4031", "리프레시 토큰이 만료되었습니다.");
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new GeneralException("JWT4032", "유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        String email = jwtTokenProvider.getEmail(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
+
+        if (user.getRefreshToken() == null || !user.getRefreshToken().equals(refreshToken)) {
+            throw new GeneralException("JWT4005", "RefreshToken이 일치하지 않습니다.");
+        }
+
+        String newAccessToken = jwtTokenProvider.createAccessToken(email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+
+        user.updateRefreshToken(newRefreshToken);
+
         Map<String, String> tokens = new HashMap<>();
-        tokens.put("accessToken", accessToken);
-        tokens.put("refreshToken", refreshToken);
+        tokens.put("accessToken", newAccessToken);
+        tokens.put("refreshToken", newRefreshToken);
 
         return tokens;
     }
