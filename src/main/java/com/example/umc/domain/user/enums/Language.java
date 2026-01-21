@@ -10,8 +10,8 @@ public enum Language {
     EN("en", "영어 (English)"),
     JP("ja", "일본어 (日本語)"),
     CN("zh", "중국어 (中文)"),
-    VI("vi", "베트남어 (Tiếng Việt)"); // 세미콜론(;) 확인!
+    VI("vi", "베트남어 (Tiếng Việt)");
 
-    private final String code;        // "ko", "ja" 등
-    private final String description; // "한국어", "일본어" 등
+    private final String code;
+    private final String description;
 }
