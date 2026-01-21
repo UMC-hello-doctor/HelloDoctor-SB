@@ -1,8 +1,9 @@
 package com.example.umc.domain.user.service;
 
-import com.example.umc.domain.user.dto.GoogleLoginDto;
-import com.example.umc.domain.user.dto.LoginResponseDto;
+import com.example.umc.domain.user.dto.request.LoginRequestDto;
+import com.example.umc.domain.user.dto.response.LoginResponseDto;
 import com.example.umc.domain.user.entity.User;
+import com.example.umc.domain.user.repository.PatientProfileRepository;
 import com.example.umc.domain.user.repository.UserRepository;
 import com.example.umc.global.config.JwtTokenProvider;
 import com.example.umc.global.error.GeneralException;
@@ -26,13 +27,14 @@ import java.util.Map;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PatientProfileRepository patientProfileRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${google.client-id}")
     private String googleClientId;
 
     @Transactional
-    public LoginResponseDto googleLogin(GoogleLoginDto dto) {
+    public LoginResponseDto googleLogin(LoginRequestDto dto) {
         String email;
         String name;
         String providerId;
@@ -75,6 +77,8 @@ public class AuthService {
 
         userRepository.save(user);
 
+        boolean isNewUser = !patientProfileRepository.existsByUserId(user.getId());
+
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
@@ -86,6 +90,7 @@ public class AuthService {
                 .name(user.getName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .isNewUser(isNewUser)
                 .build();
     }
 
