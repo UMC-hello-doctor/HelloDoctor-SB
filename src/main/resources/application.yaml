@@ -18,7 +18,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
+open-api:
+  service-key: ${MAP_API_KEY}
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
   security:
     oauth2:
       client:

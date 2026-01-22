@@ -2,6 +2,7 @@ package com.example.umc.domain.user.entity;
 
 import com.example.umc.domain.user.enums.BloodType;
 import com.example.umc.domain.user.enums.Gender;
+import com.example.umc.domain.medicine.entity.MyMedicine;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -58,4 +59,7 @@ public class PatientProfile {
         userAllergy.setPatientProfile(this);
     }
 
+    @Builder.Default
+    @OneToMany(mappedBy = "patientProfile", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MyMedicine> medicines = new ArrayList<>();
 }
