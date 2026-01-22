@@ -3,11 +3,18 @@ package com.example.umc.global.error;
 import com.example.umc.global.common.ApiResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ApiResponse<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        String errorMessage = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        return ApiResponse.onFailure("PROFILE4000", errorMessage, null);
+    }
 
     @ExceptionHandler(GeneralException.class)
     public ApiResponse<Object> handleGeneralException(GeneralException e) {
