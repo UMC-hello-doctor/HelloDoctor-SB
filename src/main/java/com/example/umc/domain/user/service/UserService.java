@@ -1,108 +1,103 @@
-//package com.example.umc.domain.user.service;
-//
-//import com.example.umc.domain.user.dto.UserRegistrationDto;
-//import com.example.umc.domain.user.entity.*;
-//import com.example.umc.domain.user.enums.AllergyType;
-//import com.example.umc.domain.user.enums.Language;
-//import com.example.umc.domain.user.repository.PatientProfileRepository;
-//import com.example.umc.domain.user.repository.UserRepository;
-//import com.example.umc.global.config.JwtTokenProvider;
-//import com.example.umc.global.error.GeneralException;
-//import io.jsonwebtoken.ExpiredJwtException;
-//import io.jsonwebtoken.JwtException;
-//import lombok.RequiredArgsConstructor;
-//import org.springframework.stereotype.Service;
-//import org.springframework.transaction.annotation.Transactional;
-//
-//import java.util.HashMap;
-//import java.util.Map;
-//
-//@Service
-//@RequiredArgsConstructor
-//@Transactional
-//public class UserService {
-//
-//    private final UserRepository userRepository;
-//    private final PatientProfileRepository patientProfileRepository;
-//    private final JwtTokenProvider jwtTokenProvider;
-//
-//    public void registerUserInfo(String email, UserRegistrationDto dto) {
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
-//
-//        PatientProfile profile = patientProfileRepository.findByUser(user)
-//                .orElseGet(() -> PatientProfile.builder()
-//                        .user(user)
-//                        .displayName(dto.getName())
-//                        .gender(dto.getGender())
-//                        .birthDate(dto.getBirthDate())
-//                        .bloodType(dto.getBloodType())
-//                        .build());
-//
-//        profile.setDisplayName(dto.getName());
-//        profile.setGender(dto.getGender());
-//        profile.setBirthDate(dto.getBirthDate());
-//        profile.setBloodType(dto.getBloodType());
-//        profile.setBloodTypeData(dto.getBloodTypeDetail());
-//        profile.setHasAllergy(dto.isHasAllergy());
-//        profile.setTakesMedication(dto.isTakesMedication());
-//        profile.setPregnant(dto.isPregnant());
-//
-//        if (dto.isHasAllergy() && dto.getAllergies() != null) {
-//            profile.getAllergies().clear();
-//            for (String allergyName : dto.getAllergies()) {
-//                try {
-//                    AllergyType type = AllergyType.valueOf(allergyName);
-//                    UserAllergy userAllergy = UserAllergy.builder()
-//                            .patientProfile(profile)
-//                            .allergyType(type)
-//                            .build();
-//                    profile.getAllergies().add(userAllergy);
-//                } catch (IllegalArgumentException e) {
-//                }
-//            }
-//        }
-//
-//        patientProfileRepository.save(profile);
-//    }
-//
-//    public Map<String, String> reissueToken(String refreshToken) {
-//        try {
-//            jwtTokenProvider.validateToken(refreshToken);
-//        } catch (ExpiredJwtException e) {
-//            throw new GeneralException("JWT4031", "리프레시 토큰이 만료되었습니다.");
-//        } catch (JwtException | IllegalArgumentException e) {
-//            throw new GeneralException("JWT4032", "유효하지 않은 리프레시 토큰입니다.");
-//        }
-//
-//        String email = jwtTokenProvider.getEmail(refreshToken);
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
-//
-//        if (user.getRefreshToken() == null || !user.getRefreshToken().equals(refreshToken)) {
-//            throw new GeneralException("JWT4005", "RefreshToken이 일치하지 않습니다.");
-//        }
-//
-//        String newAccessToken = jwtTokenProvider.createAccessToken(email);
-//        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
-//
-//        user.updateRefreshToken(newRefreshToken);
-//
-//        Map<String, String> tokens = new HashMap<>();
-//        tokens.put("accessToken", newAccessToken);
-//        tokens.put("refreshToken", newRefreshToken);
-//
-//        return tokens;
-//    }
-//
-//    public void updateLanguage(String email, String languageCode) {
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
-//
-//        try {
-//            user.setLanguage(Language.valueOf(languageCode.toUpperCase()));
-//        } catch (IllegalArgumentException e) {
-//            throw new GeneralException("COMMON400", "지원하지 않는 언어 코드입니다.");
-//        }
-//    }
-//}
+package com.example.umc.domain.user.service;
+
+import com.example.umc.domain.user.dto.request.LanguageUpdateDto;
+import com.example.umc.domain.user.dto.request.UserProfileRegistrationRequestDto;
+import com.example.umc.domain.user.dto.response.MyPageResponseDto;
+import com.example.umc.domain.user.dto.response.UserProfileRegistrationResponseDto;
+import com.example.umc.domain.user.entity.PatientProfile;
+import com.example.umc.domain.user.entity.User;
+import com.example.umc.domain.user.entity.UserAllergy;
+import com.example.umc.domain.user.enums.BloodType;
+import com.example.umc.domain.user.repository.PatientProfileRepository;
+import com.example.umc.domain.user.repository.UserRepository;
+import com.example.umc.global.error.GeneralException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PatientProfileRepository patientProfileRepository;
+
+    @Transactional
+    public void updateLanguage(Long userId, LanguageUpdateDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
+        user.setLanguage(dto.getLanguage());
+    }
+
+    @Transactional
+    public UserProfileRegistrationResponseDto registerUserProfile(Long userId, UserProfileRegistrationRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException("USER4004", "사용자를 찾을 수 없습니다."));
+
+        if (dto.getBloodType() == BloodType.ETC &&
+                (dto.getBloodTypeDetail() == null || dto.getBloodTypeDetail().trim().isEmpty())) {
+            throw new GeneralException("PROFILE4000", "혈액형 상세 정보를 입력해주세요.");
+        }
+
+        if (dto.getBloodType() != BloodType.ETC && dto.getBloodTypeDetail() != null) {
+            throw new GeneralException("PROFILE4000", "일반 혈액형 선택 시 상세 정보를 입력할 수 없습니다.");
+        }
+
+        if (dto.getHasAllergy() && (dto.getAllergyTypes() == null || dto.getAllergyTypes().isEmpty())) {
+            throw new GeneralException("PROFILE4000", "알레르기 종류를 선택해주세요.");
+        }
+
+        String finalBloodDetail = (dto.getBloodType() == BloodType.ETC) ? dto.getBloodTypeDetail() : null;
+
+        PatientProfile profile = PatientProfile.builder()
+                .user(user)
+                .displayName(dto.getDisplayName())
+                .gender(dto.getGender())
+                .birthDate(dto.getBirthDate())
+                .bloodType(dto.getBloodType())
+                .bloodTypeDetail(finalBloodDetail)
+                .hasAllergy(dto.getHasAllergy())
+                .takesMedication(dto.getTakesMedication())
+                .isPregnant(dto.getIsPregnant())
+                .build();
+
+        if (dto.getHasAllergy() && dto.getAllergyTypes() != null) {
+            dto.getAllergyTypes().forEach(type -> {
+                UserAllergy allergy = UserAllergy.builder()
+                        .allergyType(type)
+                        .patientProfile(profile)
+                        .build();
+                profile.addUserAllergy(allergy);
+            });
+        }
+
+        PatientProfile savedProfile = patientProfileRepository.save(profile);
+
+        return UserProfileRegistrationResponseDto.builder()
+                .profileId(savedProfile.getId())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public MyPageResponseDto getMyPageProfile(Long userId) {
+        PatientProfile profile = patientProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new GeneralException("USER4006", "건강 프로필을 찾을 수 없습니다."));
+
+        List<String> tags = profile.getUserAllergies().stream()
+                .map(userAllergy -> userAllergy.getAllergyType().getDescription())
+                .collect(Collectors.toList());
+
+        return MyPageResponseDto.builder()
+                .displayName(profile.getDisplayName())
+                .birthDate(profile.getBirthDate())
+                .gender(profile.getGender())
+                .bloodType(profile.getBloodType())
+                .tags(tags)
+                .build();
+    }
+}
