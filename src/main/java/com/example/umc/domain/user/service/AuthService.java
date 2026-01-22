@@ -79,8 +79,8 @@ public class AuthService {
 
         boolean isNewUser = !patientProfileRepository.existsByUserId(user.getId());
 
-        String accessToken = jwtTokenProvider.createAccessToken(email);
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), email);
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), email);
 
         user.updateRefreshToken(refreshToken);
 
@@ -90,7 +90,7 @@ public class AuthService {
                 .name(user.getName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .isNewUser(isNewUser)
+                .newUser(isNewUser)
                 .build();
     }
 
@@ -112,8 +112,8 @@ public class AuthService {
             throw new GeneralException("JWT4005", "RefreshToken이 일치하지 않습니다.");
         }
 
-        String newAccessToken = jwtTokenProvider.createAccessToken(email);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getId(), email);
 
         user.updateRefreshToken(newRefreshToken);
 
