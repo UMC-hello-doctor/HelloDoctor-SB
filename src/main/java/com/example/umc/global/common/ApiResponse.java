@@ -18,6 +18,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, "COMMON200", "성공", result);
     }
 
+    public static <T> ApiResponse<T> onSuccess(String message, T result) {
+        return new ApiResponse<>(true, "200", message, result);
+    }
+
     public static <T> ApiResponse<T> onFailure(String code, String message, T data) {
         return new ApiResponse<>(false, code, message, data);
     }

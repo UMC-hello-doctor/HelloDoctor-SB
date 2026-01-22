@@ -1,8 +1,9 @@
 package com.example.umc.domain.user.service;
 
-import com.example.umc.domain.user.dto.GoogleLoginDto;
-import com.example.umc.domain.user.dto.LoginResponseDto;
+import com.example.umc.domain.user.dto.request.LoginRequestDto;
+import com.example.umc.domain.user.dto.response.LoginResponseDto;
 import com.example.umc.domain.user.entity.User;
+import com.example.umc.domain.user.repository.PatientProfileRepository;
 import com.example.umc.domain.user.repository.UserRepository;
 import com.example.umc.global.config.JwtTokenProvider;
 import com.example.umc.global.error.GeneralException;
@@ -26,13 +27,14 @@ import java.util.Map;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PatientProfileRepository patientProfileRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Value("${google.client-id}")
     private String googleClientId;
 
     @Transactional
-    public LoginResponseDto googleLogin(GoogleLoginDto dto) {
+    public LoginResponseDto googleLogin(LoginRequestDto dto) {
         String email;
         String name;
         String providerId;
@@ -75,8 +77,10 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String accessToken = jwtTokenProvider.createAccessToken(email);
-        String refreshToken = jwtTokenProvider.createRefreshToken(email);
+        boolean isNewUser = !patientProfileRepository.existsByUserId(user.getId());
+
+        String accessToken = jwtTokenProvider.createAccessToken(user.getId(), email);
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId(), email);
 
         user.updateRefreshToken(refreshToken);
 
@@ -86,6 +90,7 @@ public class AuthService {
                 .name(user.getName())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .newUser(isNewUser)
                 .build();
     }
 
@@ -107,8 +112,8 @@ public class AuthService {
             throw new GeneralException("JWT4005", "RefreshToken이 일치하지 않습니다.");
         }
 
-        String newAccessToken = jwtTokenProvider.createAccessToken(email);
-        String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
+        String newAccessToken = jwtTokenProvider.createAccessToken(user.getId(), email);
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getId(), email);
 
         user.updateRefreshToken(newRefreshToken);
 

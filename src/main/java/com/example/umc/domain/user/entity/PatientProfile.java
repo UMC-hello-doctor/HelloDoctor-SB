@@ -42,7 +42,7 @@ public class PatientProfile {
     private BloodType bloodType;
 
     @Column(length = 50)
-    private String bloodTypeData;
+    private String bloodTypeDetail;
 
     private boolean hasAllergy;
 
@@ -52,7 +52,12 @@ public class PatientProfile {
 
     @Builder.Default
     @OneToMany(mappedBy = "patientProfile", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserAllergy> allergies = new ArrayList<>();
+    private List<UserAllergy> userAllergies = new ArrayList<>();
+
+    public void addUserAllergy(UserAllergy userAllergy) {
+        this.userAllergies.add(userAllergy);
+        userAllergy.setPatientProfile(this);
+    }
 
     @Builder.Default
     @OneToMany(mappedBy = "patientProfile", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,10 +1,10 @@
 package com.example.umc.domain.user.controller;
 
-import com.example.umc.domain.user.dto.GoogleLoginDto;
-import com.example.umc.domain.user.dto.LoginResponseDto;
+import com.example.umc.domain.user.dto.request.LoginRequestDto;
+import com.example.umc.domain.user.dto.response.LoginResponseDto;
 import com.example.umc.domain.user.service.AuthService;
 import com.example.umc.global.common.ApiResponse;
-import com.example.umc.domain.user.dto.RefreshTokenDto;
+import com.example.umc.domain.user.dto.request.RefreshTokenDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +21,7 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/google")
-    public ApiResponse<LoginResponseDto> googleLogin(@RequestBody GoogleLoginDto dto) {
+    public ApiResponse<LoginResponseDto> googleLogin(@RequestBody LoginRequestDto dto) {
         LoginResponseDto loginResponse = authService.googleLogin(dto);
         return ApiResponse.onSuccess(loginResponse);
     }

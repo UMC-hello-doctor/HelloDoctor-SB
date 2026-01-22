@@ -1,4 +1,4 @@
-package com.example.umc.domain.user.dto;
+package com.example.umc.domain.user.dto.request;
 
 import com.example.umc.domain.user.enums.Language;
 import lombok.*;

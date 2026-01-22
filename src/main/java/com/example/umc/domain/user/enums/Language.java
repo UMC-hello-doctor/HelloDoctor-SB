@@ -1,5 +1,17 @@
 package com.example.umc.domain.user.enums;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
 public enum Language {
-    KO, EN, JP, CN, VI
+    KO("ko", "한국어"),
+    EN("en", "영어 (English)"),
+    JP("ja", "일본어 (日本語)"),
+    CN("zh", "중국어 (中文)"),
+    VI("vi", "베트남어 (Tiếng Việt)");
+
+    private final String code;
+    private final String description;
 }

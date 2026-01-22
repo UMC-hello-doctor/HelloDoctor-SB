@@ -28,16 +28,17 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    public String createAccessToken(String email) {
-        return createToken(email, accessTokenValidity);
+    public String createAccessToken(Long userId, String email) {
+        return createToken(userId, email, accessTokenValidity);
     }
 
-    public String createRefreshToken(String email) {
-        return createToken(email, refreshTokenValidity);
+    public String createRefreshToken(Long userId, String email) {
+        return createToken(userId, email, refreshTokenValidity);
     }
 
-    private String createToken(String email, long validityInMilliseconds) {
+    private String createToken(Long userId, String email, long validityInMilliseconds) {
         Claims claims = Jwts.claims().setSubject(email);
+        claims.put("userId", userId);
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
@@ -49,10 +50,14 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // 토큰에서 이메일 추출
     public String getEmail(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody().getSubject();
+    }
+
+    public Long getUserId(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build()
+                .parseClaimsJws(token).getBody().get("userId", Long.class);
     }
 
     public void validateToken(String token) {
