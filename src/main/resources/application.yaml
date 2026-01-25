@@ -34,7 +34,7 @@ kakao:
               - profile
 
 jwt:
-  secret: your_super_secret_key_make_it_very_long_for_security_reasons
+  secret: ${JWT_SECRET}
   access-expiration: 3600000 # 1시간 (ms 단위)
   refresh-expiration: 1209600000 # 14일 (ms 단위)
 
