@@ -1,4 +1,4 @@
-package com.example.umc.global.config;
+package com.example.umc.global.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;

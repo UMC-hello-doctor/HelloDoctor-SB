@@ -1,5 +1,7 @@
 package com.example.umc.global.config;
 
+import com.example.umc.global.auth.JwtAuthenticationFilter;
+import com.example.umc.global.auth.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package com.example.umc.global.config;
+package com.example.umc.global.auth;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

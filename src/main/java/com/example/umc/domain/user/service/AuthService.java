@@ -5,7 +5,7 @@ import com.example.umc.domain.user.dto.response.LoginResponseDto;
 import com.example.umc.domain.user.entity.User;
 import com.example.umc.domain.user.repository.PatientProfileRepository;
 import com.example.umc.domain.user.repository.UserRepository;
-import com.example.umc.global.config.JwtTokenProvider;
+import com.example.umc.global.auth.JwtTokenProvider;
 import com.example.umc.global.error.GeneralException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
