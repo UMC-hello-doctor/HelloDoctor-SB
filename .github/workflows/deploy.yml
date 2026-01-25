@@ -43,5 +43,5 @@ jobs:
       - name: Deploy to Server via SSH
         run: |
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=yes root@${{ secrets.HOST }} << 'EOF'
-            sudo systemctl restart hellodoctor
-          EOF    
+          sudo systemctl restart hellodoctor
+          EOF   
