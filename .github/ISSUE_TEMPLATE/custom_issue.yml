@@ -1,0 +1,16 @@
+name: "Feature"
+description: "새로운 기능 추가"
+title: "feat/ "
+labels: ["feat"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: "📄 설명"
+      description: "새로운 기능에 대한 설명을 작성해 주세요."
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "🙋 참고 자료"
+      description: "참고 자료가 있다면 작성해 주세요."
