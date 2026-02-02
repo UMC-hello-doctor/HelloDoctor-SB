@@ -56,7 +56,7 @@ public class PublicHospitalXmlDto {
         private Double distance;  // 거리 (일부 API에서는 없을 수 있음)
         private String dutyAddr;  // 주소
         private String dutyTel1;  // 전화번호
-
+        private String dutyDivNam; // 병원분류명
         // 2. 좌표 정보 (XML 태그명: wgs84Lat, wgs84Lon)
         // [중요] 변수명은 latitude로 쓰되, XML의 wgs84Lat 값을 여기에 넣으라고 매핑해주는 것
         @JacksonXmlProperty(localName = "wgs84Lat")
