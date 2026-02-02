@@ -15,14 +15,20 @@ public class MapController {
 
     private final MapService mapService;
 
-        @GetMapping("/search")
+    /**
+     * 위치 기반 병원 검색 API (다국어 지원)
+     * GET /api/v1/places/search?lat=37.5&lon=127.0&dept=내과&lang=VI
+     */
+    @GetMapping("/search")
     public ApiResponse<List<MapDto.HospitalSimpleRes>> searchHospitals(
             @RequestParam("lat") Double userLat,
             @RequestParam("lon") Double userLon,
-            @RequestParam("dept") String dept
+            @RequestParam("dept") String dept,
+            @RequestParam(value = "lang", defaultValue = "KO") String lang // 언어 설정 받기
     ) {
-        // Controller가 훨씬 깔끔해졌죠?
-        List<MapDto.HospitalSimpleRes> result = mapService.searchHospitalsByLocation(userLat, userLon, dept);
+        // [수정] 서비스 호출 시 'lang' 변수도 같이 넘겨줍니다.
+        List<MapDto.HospitalSimpleRes> result = mapService.searchHospitalsByLocation(userLat, userLon, dept, lang);
+
         return ApiResponse.onSuccess(result);
     }
 }
